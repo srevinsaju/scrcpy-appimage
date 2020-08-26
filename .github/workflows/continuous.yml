@@ -37,8 +37,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set up User
         run: |
-          pacman -Syu
-          pacman -S sudo
+          pacman -Syu --noconfirm
+          pacman -S sudo --noconfirm
           sed -i 's,# %wheel ALL=(ALL) ALL,%wheel\tALL=(ALL)\tNOPASSWD:ALL,g' /etc/sudoers
           useradd -m github
           usermod -aG wheel github
@@ -46,9 +46,9 @@ jobs:
           
       - name: Install git
         run: |
-          sudo pacman -S git wget curl jq unzip
-          sudo pacman -S gcc cmake pkgconf
-          sudo pacman -S meson sdl2 ffmpeg android-tools
+          sudo pacman -S git wget curl jq unzip --noconfirm
+          sudo pacman -S gcc cmake pkgconf --noconfirm
+          sudo pacman -S meson sdl2 ffmpeg android-tools --noconfirm
 
       - name: Clone scrcpy
         run: |
