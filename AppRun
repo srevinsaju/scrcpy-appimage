@@ -1,0 +1,11 @@
+#!/bin/sh
+# Export APPRUN if running from an extracted image
+self="$(readlink -f -- $0)"
+here="${self%/*}"
+APPDIR="${APPDIR:-${here}}"
+
+export ADB="${APPDIR}/usr/bin/adb"
+export SCRCPY_SERVER_PATH="${APPDIR}/usr/local/share/scrcpy/scrcpy-server"
+export PATH="${APPDIR}/usr/bin:${PATH}"
+
+${APPDIR}/usr/bin/scrcpy

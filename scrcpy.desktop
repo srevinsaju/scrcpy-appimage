@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=scrcpy
+Exec=scrcpy
+Type=Application
+Icon=scrcpy
+Terminal=true
+Categories=Development;
+Keywords=Python;Screen;Mirroring;Android;
+StartupWMClass=scrcpy

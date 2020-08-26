@@ -1,0 +1,110 @@
+#
+##MIT License
+#
+#Copyright (c) 2020 Srevin Saju
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in all
+#copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+#
+#-----------------------------
+#This file is part of Zap AppImage Package Manager
+
+name: Continuous
+on:
+  - push
+
+jobs:
+  centos:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up User
+        run: |
+          pacman -Syu
+          pacman -S sudo
+          sed -i 's,# %wheel ALL=(ALL) ALL,%wheel\tALL=(ALL)\tNOPASSWD:ALL,g' /etc/sudoers
+          useradd -m github
+          usermod -aG wheel github
+          su - github
+          
+      - name: Install git
+        run: |
+          sudo pacman -S git wget curl jq unzip
+          sudo pacman -S gcc cmake pkgconf
+          sudo pacman -S meson sdl2 ffmpeg android-tools
+
+      - name: Clone scrcpy
+        run: |
+          git clone https://github.com/Genymobile/scrcpy
+          cd scrcpy
+          wget $(curl https://api.github.com/repos/Genymobile/scrcpy/releases/latest | jq -r '.assets[].browser_download_url' | grep server) -O scrcpy_server
+ 
+
+      - name: Download adb
+        run: |
+          wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+          unzip platform-tools-latest-linux.zip
+
+      - name: Build scrcpy
+        run: |
+          export SRC_ROOT=$(realpath .)
+          export ADB_DIR=$(realpath platform-tools)
+          cd scrcpy
+          meson x --buildtype release --strip -Db_lto=true -Dprebuilt_server=scrcpy_server
+          ninja -Cx
+          sudo ninja -Cx install
+          wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+          https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x appimagetool-*.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export BUILD_DIR=$(realpath x)
+          cp $SRC_ROOT/build.sh .
+          chmod +x build.sh
+          ./build.sh
+          mkdir -p dist
+          mv scrcpy*.AppImage dist/.          
+
+      - name: Upload Appimage
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: scrcpy-continuous-x86_64.AppImage
+          path: 'scrcpy/dist/'
+
+  Release:
+    needs: [centos]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v1
+      with:
+        name: scrcpy-continuous-x86_64.AppImage
+
+    - name: Release
+      uses: marvinpinto/action-automatic-releases@latest
+      if: github.ref == 'refs/heads/master'
+      with:
+        automatic_release_tag: continuous
+        title: Scrcpy AppImage Release
+        prerelease: false
+        files: |
+          scrcpy-continuous-x86_64.AppImage
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+ 
