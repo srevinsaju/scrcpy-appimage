@@ -22,11 +22,16 @@
 #SOFTWARE.
 #
 #-----------------------------
-#This file is part of Zap AppImage Package Manager
+
 
 name: Continuous
 on:
-  - push
+  schedule:
+    - cron: "5 */12 * * *"
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
   centos:
