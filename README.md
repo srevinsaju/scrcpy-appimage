@@ -24,6 +24,6 @@ the `+x` permissisions. So, right click > Properties > Allow Execution
 ./scrcpy-*.AppImage
 ```
 ```bash
-chmod +x Element-*.AppImage
-./Element-*.AppImage
+chmod +x scrcpy-*.AppImage
+./scrcpy-*.AppImage
 ```
