@@ -10,6 +10,9 @@ export APPIMAGE_EXTRACT_AND_RUN=1
 cp $BUILD_DIR/app/scrcpy AppDir/usr/bin/.
 cp $ADB_DIR/adb AppDir/usr/bin/.
 
+cp $BUILD_DIR/../LICENSE AppDir/.
+echo $(git describe --tags) > AppDir/VERSION.txt
+
 mkdir -p AppDir/usr/local/share/scrcpy
 cp $BUILD_DIR/../scrcpy_server AppDir/usr/local/share/scrcpy/scrcpy-server
 
