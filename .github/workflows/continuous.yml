@@ -85,7 +85,7 @@ jobs:
           chmod +x build.sh
           ./build.sh
           mkdir -p dist
-          mv scrcpy*.AppImage dist/.          
+          mv scrcpy*.AppImage* dist/.          
 
       - name: Upload Appimage
         uses: actions/upload-artifact@v1.0.0
