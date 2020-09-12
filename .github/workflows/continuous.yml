@@ -87,7 +87,7 @@ jobs:
           mkdir AppDir
           export SRC_ROOT=$(realpath ..)
           export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/pulseaudio/:$LD_LIBRARY_PATH
-          ./linuxdeploy*.AppImage -e /usr/local/bin/scrcpy --desktop-file $SRC_ROOT/scrcpy.desktop --icon-file $SRC_ROOT/scrcpy.png --appdir=AppDir --custom-apprun=$SRC_ROOT/AppRun --library=/usr/lib/x86_64-linux-gnu/libsndio.so.6.1
+          ./linuxdeploy*.AppImage -e /usr/local/bin/scrcpy --desktop-file $SRC_ROOT/scrcpy.desktop --icon-file $SRC_ROOT/scrcpy.png --appdir=AppDir --custom-apprun=$SRC_ROOT/AppRun --library=/usr/lib/x86_64-linux-gnu/libsndio.so.6.1 --library=/usr/lib/x86_64-linux-gnu/libicui18n.so.60 --library=/usr/lib/x86_64-linux-gnu/libicudata.so.60 --library=/usr/lib/x86_64-linux-gnu/libnettle.so.6 --library=/usr/lib/x86_64-linux-gnu/libhogweed.so.4 --library=/usr/lib/x86_64-linux-gnu/libicuuc.so.60
           wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
           unzip platform-tools-latest-linux.zip
           export ADB_DIR=$(realpath platform-tools)
