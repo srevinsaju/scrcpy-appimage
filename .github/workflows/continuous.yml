@@ -34,58 +34,73 @@ on:
     branches: [master]
 
 jobs:
-  centos:
+  ubuntu:
     runs-on: ubuntu-latest
-    container:
-      image: archlinux:latest
+    container: 
+      image: ubuntu:bionic
     steps:
       - uses: actions/checkout@v2
       - name: Set up User
         run: |
-          pacman -Syu --noconfirm
-          pacman -S sudo --noconfirm
-          sed -i 's,# %wheel ALL=(ALL) ALL,%wheel\tALL=(ALL)\tNOPASSWD:ALL,g' /etc/sudoers
+          apt update
+          apt install -y sudo
+          echo "github ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
           useradd -m github
-          usermod -aG wheel github
+          usermod -aG sudo github
           su - github
-          
-      - name: Install git
-        run: |
-          sudo pacman -S git wget curl jq unzip --noconfirm
-          sudo pacman -S gcc cmake pkgconf --noconfirm
-          sudo pacman -S meson sdl2 ffmpeg android-tools --noconfirm
+          sudo apt -y install git wget curl jq unzip
+          sudo apt -y install build-essential
+
 
       - name: Clone scrcpy
-        run: |
+        run: | 
+          wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/ninja-linux.zip
+          unzip ninja-linux.zip
+          mkdir bin
+          mv ninja bin/.
+          echo "Ninja here: $(which ninja)"
           git clone https://github.com/Genymobile/scrcpy
           cd scrcpy
-          wget $(curl https://api.github.com/repos/Genymobile/scrcpy/releases/latest | jq -r '.assets[].browser_download_url' | grep server) -O scrcpy_server
- 
-
-      - name: Download adb
-        run: |
-          wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
-          unzip platform-tools-latest-linux.zip
+          sudo apt install -y ffmpeg libsdl2-2.0-0 adb
+          # client build dependencies
+          sudo apt install -y gcc git pkg-config ninja-build \
+                 libavcodec-dev libavformat-dev libavutil-dev \
+                 libsdl2-dev
+          sudo apt install -y python3-pip
+          pip3 install meson --user
 
       - name: Build scrcpy
         run: |
-          export SRC_ROOT=$(realpath .)
-          export ADB_DIR=$(realpath platform-tools)
           cd scrcpy
-          meson x --buildtype release --strip -Db_lto=true -Dprebuilt_server=scrcpy_server
-          ninja -Cx
-          sudo ninja -Cx install
-          wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
-          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          chmod +x appimagetool-*.AppImage
-          chmod +x linuxdeploy-x86_64.AppImage
+          wget $(curl https://api.github.com/repos/Genymobile/scrcpy/releases/latest | jq -r '.assets[].browser_download_url' | grep server) -O scrcpy_server
+          ~/.local/bin/meson x --buildtype release --strip -Db_lto=true \
+            -Dprebuilt_server=./scrcpy_server
+          ninja -Cx 
+          sudo ninja -Cx install 
+
+      - name: Build AppImage
+        run: |
+          cd scrcpy
           export APPIMAGE_EXTRACT_AND_RUN=1
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+          mkdir AppDir
+          export SRC_ROOT=$(realpath ..)
+          export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/pulseaudio/:$LD_LIBRARY_PATH
+          ./linuxdeploy*.AppImage -e /usr/local/bin/scrcpy --desktop-file $SRC_ROOT/scrcpy.desktop --icon-file $SRC_ROOT/scrcpy.png --appdir=AppDir --custom-apprun=$SRC_ROOT/AppRun --library=/usr/lib/x86_64-linux-gnu/libsndio.so.6.1
+          wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+          unzip platform-tools-latest-linux.zip
+          export ADB_DIR=$(realpath platform-tools)
           export BUILD_DIR=$(realpath x)
-          cp $SRC_ROOT/build.sh .
-          chmod +x build.sh
-          ./build.sh
-          mkdir -p dist
-          mv scrcpy*.AppImage* dist/.          
+          cp $BUILD_DIR/app/scrcpy AppDir/usr/bin/.
+          cp $ADB_DIR/adb AppDir/usr/bin/.
+          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool*.AppImage
+          mkdir -p AppDir/usr/local/share/scrcpy/
+          cp scrcpy_server AppDir/usr/local/share/scrcpy/scrcpy-server
+          ./appimagetool*.AppImage AppDir -n -u 'gh-releases-zsync|srevinsaju|scrcpy-appimage|continuous|scrcpy*.AppImage.zsync' scrcpy-$(git describe --tags)-$(uname -m).AppImage
+          mkdir dist
+          mv scrcpy*.AppImage* dist/
 
       - name: Upload Appimage
         uses: actions/upload-artifact@v1.0.0
@@ -93,8 +108,10 @@ jobs:
           name: scrcpy-continuous-x86_64.AppImage
           path: 'scrcpy/dist/'
 
+
+
   Release:
-    needs: [centos]
+    needs: [ubuntu]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v1
