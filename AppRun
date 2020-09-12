@@ -7,5 +7,5 @@ APPDIR="${APPDIR:-${here}}"
 export ADB="${APPDIR}/usr/bin/adb"
 export SCRCPY_SERVER_PATH="${APPDIR}/usr/local/share/scrcpy/scrcpy-server"
 export PATH="${APPDIR}/usr/bin:${PATH}"
-
+export LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH}"
 ${APPDIR}/usr/bin/scrcpy
