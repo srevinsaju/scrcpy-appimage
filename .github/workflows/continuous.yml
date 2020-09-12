@@ -22,7 +22,7 @@
 #SOFTWARE.
 #
 #-----------------------------
-
+#This file is part of Zap AppImage Package Manager
 
 name: Continuous
 on:
@@ -37,7 +37,7 @@ jobs:
   ubuntu:
     runs-on: ubuntu-latest
     container: 
-      image: ubuntu:bionic
+      image: appimagecrafters/appimage-builder:latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up User
