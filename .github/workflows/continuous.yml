@@ -104,68 +104,9 @@ jobs:
           path: 'scrcpy/dist/'
 
 
-      
-  centos:
-    runs-on: ubuntu-latest
-    container:
-      image: archlinux:latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up User
-        run: |
-          pacman -Syu --noconfirm
-          pacman -S sudo --noconfirm
-          sed -i 's,# %wheel ALL=(ALL) ALL,%wheel\tALL=(ALL)\tNOPASSWD:ALL,g' /etc/sudoers
-          useradd -m github
-          usermod -aG wheel github
-          su - github
-          
-      - name: Install git
-        run: |
-          sudo pacman -S git wget curl jq unzip --noconfirm
-          sudo pacman -S gcc cmake pkgconf --noconfirm
-          sudo pacman -S meson sdl2 ffmpeg android-tools --noconfirm
-
-      - name: Clone scrcpy
-        run: |
-          git clone https://github.com/Genymobile/scrcpy
-          cd scrcpy
-          wget $(curl https://api.github.com/repos/Genymobile/scrcpy/releases/latest | jq -r '.assets[].browser_download_url' | grep server) -O scrcpy_server
- 
-
-      - name: Download adb
-        run: |
-          wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
-          unzip platform-tools-latest-linux.zip
-
-      - name: Build scrcpy
-        run: |
-          export SRC_ROOT=$(realpath .)
-          export ADB_DIR=$(realpath platform-tools)
-          cd scrcpy
-          meson x --buildtype release --strip -Db_lto=true -Dprebuilt_server=scrcpy_server
-          ninja -Cx
-          sudo ninja -Cx install
-          wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
-          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          chmod +x appimagetool-*.AppImage
-          chmod +x linuxdeploy-x86_64.AppImage
-          export APPIMAGE_EXTRACT_AND_RUN=1
-          export BUILD_DIR=$(realpath x)
-          cp $SRC_ROOT/build.sh .
-          chmod +x build.sh
-          ./build.sh
-          mkdir -p dist
-          mv scrcpy*.AppImage dist/.          
-
-      - name: Upload Appimage
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: scrcpy-continuous-x86_64.AppImage
-          path: 'scrcpy/dist/'
 
   Release:
-    needs: [centos]
+    needs: [ubuntu]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v1
