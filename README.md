@@ -3,6 +3,10 @@
 	Scrcpy AppImage
 </h1>
 
+> **NOTE**: These appimages are far from complete. This is a patched version of 
+`scrcpy` which gets integrated into the GUI of scrcpy `guiscrcpy`.
+See [`guiscrcpy`](/srevinsaju/guiscrcpy) for more details and usage.
+
 An unofficial AppImage for the open source android screen mirroring software
 [scrcpy](https://github.com/Genymobile/scrcpy)
 
