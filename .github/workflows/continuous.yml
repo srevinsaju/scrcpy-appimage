@@ -76,31 +76,17 @@ jobs:
           mkdir dist
           mv scrcpy*.AppImage* dist/
 
-      - name: Upload Appimage
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: scrcpy-continuous-x86_64.AppImage
-          path: 'scrcpy/dist/'
 
+      - name: Create release and upload artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_CONTINUOUS_RELEASE_TAG: ${{ matrix.build_type }}
+          CHANGELOG_TYPE: conventional
+        run: |
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          export GITHUB_CONTINUOUS_RELEASE_TAG=continuous
+          export GITHUB_CONTINUOUS_RELEASE_TYPE=prerelease
+          export GITHUB_CONTINUOUS_RELEASE_NAME="Continuous build"
+          wget -q https://github.com/srevinsaju/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage && chmod +x pyuploadtool-x86_64.AppImage
+          ./pyuploadtool-x86_64.AppImage scrcpy/dist/*.AppImage*
 
-
-  Release:
-    needs: [ubuntu]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/download-artifact@v1
-      with:
-        name: scrcpy-continuous-x86_64.AppImage
-
-    - name: Release
-      uses: marvinpinto/action-automatic-releases@latest
-      if: github.ref == 'refs/heads/master'
-      with:
-        automatic_release_tag: continuous
-        title: Scrcpy AppImage Release
-        prerelease: false
-        files: |
-          scrcpy-continuous-x86_64.AppImage
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-
- 
