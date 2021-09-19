@@ -1,7 +1,18 @@
-<h1 align="center">
-	<img src="scrcpy.png" alt="scrcpy" height=200 width=200 align="middle">
-	Scrcpy AppImage
-</h1>
+<p align="center">
+    <img src="scrcpy.png" alt="an unofficial scrcpy logo" width=128 height=128>
+
+<h2 align="center">📱 scrcpy appimage</h2>
+
+  <p align="center">
+    An unofficial AppImage build for <a href="https://github.com/Genymobile/scrcpy">scrcpy</a>
+    <br>
+    <a href="https://github.com/srevinsaju/scrcpy-appimage/issues/new">Report bug</a>
+    ·
+    <a href="https://github.com/Genymobile/scrcpy">Original project</a>
+  </p>
+</p>
+
+
 
 > **NOTE**: These appimages are far from complete. This is a patched version of 
 `scrcpy` which gets integrated into the GUI of scrcpy `guiscrcpy`.
